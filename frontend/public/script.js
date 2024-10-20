@@ -1,5 +1,6 @@
 const dropArea = document.getElementById('drop-area');
 const filePreview = document.getElementById('file-preview');
+const qrCodeElem = document.getElementById('qr-code');  // Canvas element for QR code
 
 // Setup Socket.io connection
 const socket = io('https://file-sharing-backend-7089164001c8.herokuapp.com');
@@ -73,4 +74,15 @@ socket.on('file-download', (data) => {
   downloadLink.download = data.fileName;
   downloadLink.textContent = `Download ${data.fileName}`;
   document.body.appendChild(downloadLink);  // Display the download link on mobile
+});
+
+// QR Code Generation
+const myPeerId = Math.random().toString(36).substring(7);  // Generate a random Peer ID
+const link = window.location.href + '?peer=' + myPeerId;
+
+// Generate the QR code for the link
+const qr = new QRious({
+  element: qrCodeElem,  // Assuming there is a <canvas id="qr-code"></canvas> in the HTML
+  value: link,
+  size: 200  // Size of the QR code
 });
