@@ -1,12 +1,12 @@
 const dropArea = document.getElementById('drop-area');
 const filePreview = document.getElementById('file-preview');
-const qrCodeElem = document.getElementById('qr-code');  // For QR code display
-const directLinkElem = document.getElementById('direct-link');  // For direct URL display
+const qrCodeElem = document.getElementById('qr-code');  // QR code element
+const directLinkElem = document.getElementById('direct-link');  // Direct link display
 
 // Setup Socket.io connection
 const socket = io('https://file-sharing-backend-7089164001c8.herokuapp.com', { transports: ['websocket'] });
 
-// Drag-and-drop event listeners
+// Prevent default drag behaviors
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
   dropArea.addEventListener(eventName, preventDefaults, false);
 });
@@ -22,7 +22,7 @@ dropArea.addEventListener('drop', (e) => {
   handleFiles(files);
 }, false);
 
-// Handle the file(s)
+// Handle the file(s) when dropped
 function handleFiles(files) {
   [...files].forEach(file => {
     previewFile(file);  // Display the file preview
@@ -51,42 +51,42 @@ function previewFile(file) {
     reader.readAsDataURL(file);
   } else {
     const defaultIcon = document.createElement('img');
-    defaultIcon.src = 'https://via.placeholder.com/100?text=File';
+    defaultIcon.src = 'https://via.placeholder.com/100?text=File'; // Placeholder for non-image files
     fileItem.appendChild(defaultIcon);
     fileItem.appendChild(deleteButton);
     filePreview.appendChild(fileItem);
   }
 }
 
-// Upload file via Socket.io
+// Upload file via WebSocket
 function uploadFile(file) {
   const reader = new FileReader();
   reader.onload = function(e) {
     const fileData = e.target.result;  // Base64 encoded string
     socket.emit('file-upload', { fileName: file.name, fileData });
+
+    // Generate QR Code and Direct Link only after upload
+    const myPeerId = Math.random().toString(36).substring(7);  // Generate a random Peer ID
+    const link = window.location.href + '?peer=' + myPeerId;
+
+    // Generate the QR code for the link after file upload
+    const qr = new QRious({
+      element: qrCodeElem,  // The canvas element for displaying the QR code
+      value: link,
+      size: 200  // Size of the QR code
+    });
+
+    // Display the direct link for testing in another browser
+    directLinkElem.innerHTML = `<a href="${link}" target="_blank">Open in another browser window</a>`;
   };
   reader.readAsDataURL(file);  // Read file as base64
 }
 
-// On receiving the file via Socket.io
+// On receiving file via WebSocket
 socket.on('file-download', (data) => {
   const downloadLink = document.createElement('a');
-  downloadLink.href = data.fileData;
+  downloadLink.href = data.fileData;  // Base64-encoded file data
   downloadLink.download = data.fileName;
   downloadLink.textContent = `Download ${data.fileName}`;
-  document.body.appendChild(downloadLink);  // Display the download link on mobile or another browser
+  document.body.appendChild(downloadLink);  // Display the download link for other clients
 });
-
-// QR Code and Direct Link Generation
-const myPeerId = Math.random().toString(36).substring(7);  // Generate a random Peer ID
-const link = window.location.href + '?peer=' + myPeerId;
-
-// Generate the QR code for the link
-const qr = new QRious({
-  element: qrCodeElem,  // The canvas element for displaying the QR code
-  value: link,
-  size: 200  // Size of the QR code
-});
-
-// Display the direct URL for testing in another browser window
-directLinkElem.innerHTML = `<a href="${link}" target="_blank">Open in another browser window</a>`;
