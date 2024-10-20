@@ -2,6 +2,9 @@ const express = require('express');
 const http = require('http');
 const socketIO = require('socket.io');
 const cors = require('cors');
+const socket = io('https://file-sharing-backend-7089164001c8.herokuapp.com', {
+  transports: ['websocket', 'polling']  // Allow both transports
+});
 
 const app = express();
 const server = http.createServer(app);
