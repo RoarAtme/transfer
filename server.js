@@ -5,6 +5,13 @@ const cors = require('cors');
 
 const app = express();
 const server = http.createServer(app);
+const io = socketIO(server, {
+  cors: {
+    origin: 'https://eztransfer.netlify.app',
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
+});
 
 socket.on('file-upload', (data) => {
   console.log('File received:', data.fileName);
