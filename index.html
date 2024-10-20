@@ -41,12 +41,12 @@
 </head>
 <body>
     <h1>File Sharing with Thumbnails</h1>
-    <div id="drop-area">
-        <p>Drag & Drop files here</p>
-    </div>
-    <div id="file-preview" class="file-preview"></div>
-    <canvas id="qr-code"></canvas>
-    <div id="direct-link"></div>
+ <div id="drop-area" style="width: 300px; height: 200px; border: 2px dashed #ccc;">
+  Drag & Drop your file here
+</div>
+<div id="file-preview"></div>
+<canvas id="qr-code"></canvas>
+<div id="direct-link"></div>
 
    <!-- Replace with your actual Heroku backend URL -->
 <script src="https://file-sharing-backend-7089164001c8.herokuapp.com/socket.io/socket.io.js"></script>
