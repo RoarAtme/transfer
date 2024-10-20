@@ -25,28 +25,6 @@ const io = socketIO(server, {
   }
 });
 
-io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
-
-  // Handle file uploads
-  socket.on('file-upload', (data) => {
-    const { peerId, fileName, fileData, fileType } = data;
-    console.log('File received:', fileName);
-
-    // Emit to the specific peer (new window)
-    socket.to(peerId).emit('file-download', {
-      fileName,
-      fileData,
-      fileType
-    });
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
-  });
-});
-
-
 // Serve static files if needed
 app.use(express.static('public'));
 
@@ -59,22 +37,22 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
 
-  // Handle WebRTC signaling messages (if needed)
-  socket.on('signal', (data) => {
-    io.to(data.peerId).emit('signal', data);  // Relay signaling messages
-  });
-
   // Handle file uploads
   socket.on('file-upload', (data) => {
-    console.log('File received:', data.fileName);
+    const { peerId, fileName, fileData, fileType } = data;
+    console.log(`File received: ${fileName}`);
 
-    // Broadcast the file to other clients (except the uploader)
-    socket.broadcast.emit('file-download', {
-      fileName: data.fileName,
-      fileData: data.fileData  // Base64-encoded file data
+    // Emit to the specific peer (new window) using peerId
+    socket.to(peerId).emit('file-download', {
+      fileName,
+      fileData,
+      fileType  // Ensure fileType is included
     });
+  });
 
-    console.log(`Broadcasting file ${data.fileName} to other clients`);
+  // Relay WebRTC signaling messages (if needed)
+  socket.on('signal', (data) => {
+    io.to(data.peerId).emit('signal', data);
   });
 
   // Handle client disconnection

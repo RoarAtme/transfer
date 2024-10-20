@@ -86,6 +86,7 @@ function uploadFile(file) {
 
     const myPeerId = Math.random().toString(36).substring(7);  // Generate a random Peer ID
 
+    // Emit file data to the backend with a unique peerId
     socket.emit('file-upload', { peerId: myPeerId, fileName: file.name, fileData, fileType });
 
     // Hide the progress bar after upload
@@ -119,7 +120,7 @@ socket.on('file-download', (data) => {
   console.log(`Received file: ${data.fileName}`);
 
   // If the file is an image, display it
-  if (data.fileType.startsWith('image/')) {
+  if (data.fileType && data.fileType.startsWith('image/')) {
     const img = document.createElement('img');
     img.src = data.fileData;
     document.body.appendChild(img);
