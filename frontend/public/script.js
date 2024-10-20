@@ -1,6 +1,7 @@
 const dropArea = document.getElementById('drop-area');
 const filePreview = document.getElementById('file-preview');
-const qrCodeElem = document.getElementById('qr-code');  // For the QR code
+const qrCodeElem = document.getElementById('qr-code');  // For QR code display
+const directLinkElem = document.getElementById('direct-link');  // For direct URL display
 
 // Setup Socket.io connection
 const socket = io('https://file-sharing-backend-7089164001c8.herokuapp.com', { transports: ['websocket'] });
@@ -73,11 +74,11 @@ socket.on('file-download', (data) => {
   downloadLink.href = data.fileData;
   downloadLink.download = data.fileName;
   downloadLink.textContent = `Download ${data.fileName}`;
-  document.body.appendChild(downloadLink);  // Display the download link on mobile
+  document.body.appendChild(downloadLink);  // Display the download link on mobile or another browser
 });
 
-// QR Code Generation
-const myPeerId = Math.random().toString(36).substring(7);
+// QR Code and Direct Link Generation
+const myPeerId = Math.random().toString(36).substring(7);  // Generate a random Peer ID
 const link = window.location.href + '?peer=' + myPeerId;
 
 // Generate the QR code for the link
@@ -86,3 +87,6 @@ const qr = new QRious({
   value: link,
   size: 200  // Size of the QR code
 });
+
+// Display the direct URL for testing in another browser window
+directLinkElem.innerHTML = `<a href="${link}" target="_blank">Open in another browser window</a>`;
