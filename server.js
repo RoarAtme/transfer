@@ -9,7 +9,7 @@ const server = http.createServer(app);
 // Enable CORS for the entire Express server
 app.use(cors({
   origin: 'https://eztransfer.netlify.app',  // Your Netlify frontend URL
-  methods: ['GET', 'POST', 'OPTIONS'],
+  methods: ['GET', 'POST', 'OPTIONS'],  // Allow necessary methods
   credentials: true
 }));
 

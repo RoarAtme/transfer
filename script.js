@@ -4,8 +4,10 @@ const qrCodeElem = document.getElementById('qr-code');  // QR code element
 const directLinkElem = document.getElementById('direct-link');  // Direct link display
 const progressBar = document.getElementById('upload-progress');  // Progress bar element
 
-// Setup Socket.io connection
-const socket = io('https://file-sharing-backend-7089164001c8.herokuapp.com');
+// Setup Socket.io connection (force WebSocket transport)
+const socket = io('https://file-sharing-backend-7089164001c8.herokuapp.com', {
+  transports: ['websocket']  // Force WebSocket-only transport
+});
 
 // Prevent default drag behaviors
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
