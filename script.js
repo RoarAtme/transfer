@@ -106,8 +106,13 @@ function uploadFile(file) {
   reader.readAsDataURL(file);  // Read file as base64
 }
 
-// On receiving file via WebSocket
+// On receiving file via WebSocket in the new window (file-download event)
 socket.on('file-download', (data) => {
+  const loadingMessage = document.getElementById('loading-message');
+  if (loadingMessage) {
+    loadingMessage.remove();  // Remove loading message when the file is ready
+  }
+
   console.log(`Received file: ${data.fileName}`);  // Log file download event
   const downloadLink = document.createElement('a');
   downloadLink.href = data.fileData;  // Base64-encoded file data
@@ -120,3 +125,11 @@ socket.on('file-download', (data) => {
 socket.on('connect_error', (err) => {
   console.error('Connection error:', err);
 });
+
+// Loading message for the new window until the download link appears
+window.onload = () => {
+  const loadingMessage = document.createElement('div');
+  loadingMessage.id = 'loading-message';
+  loadingMessage.innerText = 'Preparing your file for download...';
+  document.body.appendChild(loadingMessage);  // Show loading message while waiting for the file
+};
