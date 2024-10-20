@@ -2,6 +2,7 @@ const dropArea = document.getElementById('drop-area');
 const filePreview = document.getElementById('file-preview');
 const qrCodeElem = document.getElementById('qr-code');  // QR code element
 const directLinkElem = document.getElementById('direct-link');  // Direct link display
+const progressBar = document.getElementById('upload-progress');  // Progress bar element
 
 // Setup Socket.io connection
 const socket = io('https://file-sharing-backend-7089164001c8.herokuapp.com');
@@ -67,12 +68,25 @@ function previewFile(file) {
   }
 }
 
-// Upload file via Socket.io
+// Upload file via Socket.io and display progress
 function uploadFile(file) {
   const reader = new FileReader();
+
+  reader.onprogress = (event) => {
+    if (event.lengthComputable) {
+      const progressPercent = (event.loaded / event.total) * 100;
+      progressBar.value = progressPercent;
+      progressBar.style.display = 'block';  // Show the progress bar when upload starts
+    }
+  };
+
   reader.onload = function(e) {
     const fileData = e.target.result;  // Base64 encoded string
     socket.emit('file-upload', { fileName: file.name, fileData });
+
+    // Hide the progress bar after upload
+    progressBar.value = 0;
+    progressBar.style.display = 'none';
 
     // Generate QR Code and Direct Link only after upload
     const myPeerId = Math.random().toString(36).substring(7);  // Generate a random Peer ID
@@ -88,12 +102,13 @@ function uploadFile(file) {
     // Display the direct link for testing in another browser
     directLinkElem.innerHTML = `<a href="${link}" target="_blank">Open in another browser window</a>`;
   };
+
   reader.readAsDataURL(file);  // Read file as base64
 }
 
 // On receiving file via WebSocket
 socket.on('file-download', (data) => {
-  console.log(`Received file: ${data.fileName}`); // Log file download event
+  console.log(`Received file: ${data.fileName}`);  // Log file download event
   const downloadLink = document.createElement('a');
   downloadLink.href = data.fileData;  // Base64-encoded file data
   downloadLink.download = data.fileName;
