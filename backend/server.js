@@ -5,6 +5,9 @@ const socketIO = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
+const cors = require('cors');
+app.use(cors({ origin: 'https://eztransfer.netlify.app' })); // Replace with your actual Netlify domain
+
 
 // Serve static files (your front-end code)
 app.use(express.static('public'));
