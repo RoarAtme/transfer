@@ -20,7 +20,7 @@ app.set('trust proxy', 1);
 const io = socketIO(server, {
   cors: {
     origin: 'https://eztransfer.netlify.app',
-    methods: ['GET', 'POST', 'OPTIONS'],  // Allow OPTIONS for preflight requests
+    methods: ['GET', 'POST', 'OPTIONS'],  // Add OPTIONS for preflight requests
     credentials: true
   },
   transports: ['websocket'],  // Force WebSocket transport only
@@ -42,8 +42,12 @@ io.on('connection', (socket) => {
 
   // Confirm the connection from the new window
   socket.on('confirm-connection', (peerId) => {
-    console.log(`Window with peerId: ${peerId} connected.`);
-    socket.join(peerId);  // Join a room for this peerId
+    if (peerId) {
+      console.log(`Window with peerId: ${peerId} connected.`);
+      socket.join(peerId);  // Join a room for this peerId
+    } else {
+      console.log('Received connection with null or invalid peerId');
+    }
   });
 
   // Handle file uploads

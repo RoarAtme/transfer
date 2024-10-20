@@ -106,6 +106,7 @@ function uploadFile(file) {
 
     // Wait for the new window to confirm the connection before sending the file
     socket.on('confirm-connection', (peerId) => {
+      console.log(`Confirmed connection for peerId: ${peerId}`);
       if (peerId === myPeerId) {
         // Emit file data to the backend with the correct peerId
         socket.emit('file-upload', { peerId: myPeerId, fileName: file.name, fileData, fileType });
@@ -148,11 +149,16 @@ socket.on('connect_error', (err) => {
   console.error('Connection error:', err);
 });
 
-// Loading message for the new window
+// Ensure peerId is passed correctly in the URL
 window.onload = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const peerId = urlParams.get('peer');
-  socket.emit('confirm-connection', peerId);  // Notify the server that this window is ready to receive the file
+  if (peerId) {
+    socket.emit('confirm-connection', peerId);  // Notify the server that this window is ready
+  } else {
+    console.error('No peerId found in URL');
+  }
+  
   const loadingMessage = document.createElement('div');
   loadingMessage.id = 'loading-message';
   loadingMessage.innerText = 'Preparing your file for download...';
