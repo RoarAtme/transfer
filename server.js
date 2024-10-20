@@ -6,7 +6,7 @@ const cors = require('cors');
 const app = express();
 const server = http.createServer(app);
 
-// Enable CORS for the entire Express server (allows your Netlify frontend to connect)
+// Enable CORS for the entire Express server
 app.use(cors({
   origin: 'https://eztransfer.netlify.app',  // Your Netlify frontend URL
   methods: ['GET', 'POST'],
@@ -19,7 +19,7 @@ app.set('trust proxy', 1);
 // Initialize Socket.io with CORS configuration
 const io = socketIO(server, {
   cors: {
-    origin: 'https://eztransfer.netlify.app',  // Netlify frontend URL
+    origin: 'https://eztransfer.netlify.app',
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -37,9 +37,14 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
 
+  // Handle WebRTC signaling messages (if needed)
+  socket.on('signal', (data) => {
+    io.to(data.peerId).emit('signal', data);  // Relay signaling messages
+  });
+
   // Handle file uploads
   socket.on('file-upload', (data) => {
-    console.log('File received:', data.fileName);  // Log file received
+    console.log('File received:', data.fileName);
 
     // Broadcast the file to other clients (except the uploader)
     socket.broadcast.emit('file-download', {
