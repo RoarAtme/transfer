@@ -93,9 +93,15 @@ function uploadFile(file) {
 
 // On receiving file via WebSocket
 socket.on('file-download', (data) => {
+  console.log(`Received file: ${data.fileName}`); // Log file download event
   const downloadLink = document.createElement('a');
   downloadLink.href = data.fileData;  // Base64-encoded file data
   downloadLink.download = data.fileName;
   downloadLink.textContent = `Download ${data.fileName}`;
   document.body.appendChild(downloadLink);  // Display the download link for other clients
+});
+
+// Error Handling (optional but useful for debugging)
+socket.on('connect_error', (err) => {
+  console.error('Connection error:', err);
 });
