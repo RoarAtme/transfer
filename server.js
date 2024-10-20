@@ -9,7 +9,7 @@ const server = http.createServer(app);
 // Enable CORS for the entire Express server
 app.use(cors({
   origin: 'https://eztransfer.netlify.app',  // Your Netlify frontend URL
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'OPTIONS'],
   credentials: true
 }));
 
@@ -20,10 +20,12 @@ app.set('trust proxy', 1);
 const io = socketIO(server, {
   cors: {
     origin: 'https://eztransfer.netlify.app',
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'OPTIONS'],  // Add OPTIONS for preflight requests
     credentials: true
   },
-   transports: ['websocket']  // Force WebSocket transport
+  transports: ['websocket'],  // Force WebSocket transport only
+  pingTimeout: 60000,  // Increase timeout to handle network latency
+  pingInterval: 25000  // Interval to keep WebSocket connection alive
 });
 
 // Serve static files if needed
