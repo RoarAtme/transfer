@@ -27,6 +27,18 @@ io.on('connection', (socket) => {
     io.to(data.peerId).emit('signal', data); // Relaying signaling messages to peers
   });
 
+  // Handle file uploads and broadcast to other clients
+  socket.on('file-upload', (data) => {
+    console.log('File received:', data.fileName);
+
+    // Broadcast the file to all other connected clients
+    socket.broadcast.emit('file-download', {
+      fileName: data.fileName,
+      fileData: data.fileData // Base64-encoded file data
+    });
+  });
+
+  // Handle client disconnections
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });

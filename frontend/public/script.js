@@ -1,8 +1,10 @@
-// Set up drag-and-drop file area
 const dropArea = document.getElementById('drop-area');
 const filePreview = document.getElementById('file-preview');
 
-// Prevent default behavior for drag events
+// Setup Socket.io connection
+const socket = io('https://file-sharing-backend-7089164001c8.herokuapp.com');
+
+// Drag-and-drop event listeners
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
   dropArea.addEventListener(eventName, preventDefaults, false);
 });
@@ -12,25 +14,17 @@ function preventDefaults(e) {
   e.stopPropagation();
 }
 
-// Highlight the drop area when dragging over it
-['dragenter', 'dragover'].forEach(eventName => {
-  dropArea.classList.add('dragging');
-});
-
-['dragleave', 'drop'].forEach(eventName => {
-  dropArea.classList.remove('dragging');
-});
-
-// Handle the file drop
 dropArea.addEventListener('drop', (e) => {
   let dt = e.dataTransfer;
   let files = dt.files;
   handleFiles(files);
 }, false);
 
+// Handle the file(s)
 function handleFiles(files) {
   [...files].forEach(file => {
-    previewFile(file);
+    previewFile(file);  // Display a thumbnail
+    uploadFile(file);   // Upload the file via Socket.io
   });
 }
 
@@ -62,16 +56,21 @@ function previewFile(file) {
   }
 }
 
-// Generate QR code
-const qrCodeElem = document.getElementById('qr-code');
-const myPeerId = Math.random().toString(36).substring(7);
-const link = window.location.href + '?peer=' + myPeerId;
-const qr = new QRious({
-  element: qrCodeElem,
-  value: link,
-  size: 200
-});
+// Upload file via WebSocket
+function uploadFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const fileData = e.target.result;  // Base64 encoded string
+    socket.emit('file-upload', { fileName: file.name, fileData });
+  };
+  reader.readAsDataURL(file);  // Read file as base64
+}
 
-// Placeholder for connecting to backend (WebRTC, socket.io, etc.)
-// Example: communicating with backend
-const backendUrl = "https://file-sharing-backend-7089164001c8.herokuapp.com/"; // Replace with your backend URL
+// On receiving file via WebSocket
+socket.on('file-download', (data) => {
+  const downloadLink = document.createElement('a');
+  downloadLink.href = data.fileData;
+  downloadLink.download = data.fileName;
+  downloadLink.textContent = `Download ${data.fileName}`;
+  document.body.appendChild(downloadLink);  // Display the download link on mobile
+});
