@@ -5,40 +5,31 @@ const cors = require('cors');
 
 const app = express();
 const server = http.createServer(app);
+
+// Enable CORS for the entire Express server
+app.use(cors({
+  origin: 'https://eztransfer.netlify.app',  // Your Netlify frontend URL
+  methods: ['GET', 'POST'],
+  credentials: true
+}));
+
+// Trust Heroku's reverse proxy
+app.set('trust proxy', 1);
+
+// Initialize Socket.io with CORS and force WebSocket transport only
 const io = socketIO(server, {
   cors: {
     origin: 'https://eztransfer.netlify.app',
     methods: ['GET', 'POST'],
     credentials: true
   },
-  transports: ['websocket'],  // Use WebSocket only, skip polling
+  transports: ['websocket']  // Force WebSocket-only, skip polling
 });
 
-
-// Enable CORS for the entire server
-app.use(cors({
-  origin: 'https://eztransfer.netlify.app',  // Allow requests from your Netlify frontend
-  methods: ['GET', 'POST'],                 // Allow GET and POST methods
-  credentials: true                         // Allow credentials (cookies, authorization headers)
-}));
-
-// Initialize Socket.io with explicit CORS settings
-const io = socketIO(server, {
-  cors: {
-    origin: 'https://eztransfer.netlify.app',  // Netlify frontend URL
-    methods: ['GET', 'POST'],                  // Allow GET and POST methods
-    credentials: true                          // If you're using cookies
-  },
-  transports: ['websocket', 'polling'],        // Ensure both polling and websocket are supported
-});
-
-// Serve static files from 'public' folder (if needed)
+// Serve static files if needed
 app.use(express.static('public'));
 
-app.set('trust proxy', 1);  // Trust Heroku's reverse proxy
-
-
-// Root route for testing server
+// Add a root route for testing the server
 app.get('/', (req, res) => {
   res.send('Backend server is running!');
 });
@@ -47,17 +38,17 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
 
-  // WebRTC signaling messages
+  // Handle WebRTC signaling messages
   socket.on('signal', (data) => {
-    io.to(data.peerId).emit('signal', data);  // Relay signaling to peers
+    io.to(data.peerId).emit('signal', data);  // Relay signaling messages
   });
 
-  // Handle file upload and broadcast to other clients
+  // Handle file uploads
   socket.on('file-upload', (data) => {
     console.log('File received:', data.fileName);
     socket.broadcast.emit('file-download', {
       fileName: data.fileName,
-      fileData: data.fileData
+      fileData: data.fileData  // Base64-encoded file data
     });
   });
 
@@ -67,7 +58,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// Start server on Heroku's assigned port or default to 3000
+// Start the server on Heroku's dynamic port or default to port 3000
 const port = process.env.PORT || 3000;
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
