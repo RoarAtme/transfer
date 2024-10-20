@@ -22,7 +22,8 @@ const io = socketIO(server, {
     origin: 'https://eztransfer.netlify.app',
     methods: ['GET', 'POST'],
     credentials: true
-  }
+  },
+   transports: ['websocket']  // Force WebSocket transport
 });
 
 // Serve static files if needed
