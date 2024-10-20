@@ -6,16 +6,18 @@ const cors = require('cors');
 const app = express();
 const server = http.createServer(app);
 
-// Enable CORS for the entire server, including WebSocket connections
-app.use(cors({ origin: 'https://eztransfer.netlify.app' }));
+// Enable CORS for Express and allow requests from Netlify
+app.use(cors({ origin: 'https://eztransfer.netlify.app', credentials: true }));
 
-// Socket.io setup with CORS configuration
+// Initialize Socket.io with CORS enabled and proper transports
 const io = socketIO(server, {
   cors: {
-    origin: 'https://eztransfer.netlify.app',  // Allow only your Netlify frontend
-    methods: ['GET', 'POST'],                   // Allow necessary methods
-    credentials: true                           // If cookies are involved, allow credentials
-  }
+    origin: 'https://eztransfer.netlify.app',  // Your Netlify URL
+    methods: ['GET', 'POST'],
+    credentials: true,
+    allowedHeaders: ['my-custom-header'],
+  },
+  transports: ['websocket', 'polling'],  // Enable both transports explicitly
 });
 
 // Serve static files from the 'public' folder
@@ -30,9 +32,9 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
 
-  // WebRTC signaling message handling
+  // Handle WebRTC signaling
   socket.on('signal', (data) => {
-    io.to(data.peerId).emit('signal', data);
+    io.to(data.peerId).emit('signal', data);  // Relaying signaling messages to peers
   });
 
   // Handle file uploads and broadcast to other clients
@@ -40,17 +42,16 @@ io.on('connection', (socket) => {
     console.log('File received:', data.fileName);
     socket.broadcast.emit('file-download', {
       fileName: data.fileName,
-      fileData: data.fileData
+      fileData: data.fileData,
     });
   });
 
-  // Handle client disconnections
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });
 });
 
-// Start the server on Heroku's dynamically assigned port or port 3000 for local testing
+// Start the server on the port specified by Heroku or default to 3000
 const port = process.env.PORT || 3000;
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
