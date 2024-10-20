@@ -2,29 +2,9 @@ const express = require('express');
 const http = require('http');
 const socketIO = require('socket.io');
 const cors = require('cors');
-const socket = io('https://file-sharing-backend-7089164001c8.herokuapp.com', {
-  transports: ['websocket', 'polling']  // Allow both transports
-});
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIO(server, {
-  cors: {
-    origin: 'https://eztransfer.netlify.app',
-    methods: ['GET', 'POST'],
-    credentials: true
-  }
-});
-
-socket.on('file-upload', (data) => {
-  console.log('File received:', data.fileName);
-  // Broadcast to other clients
-  socket.broadcast.emit('file-download', {
-    fileName: data.fileName,
-    fileData: data.fileData
-  });
-});
-
 
 // Enable CORS for the entire Express server
 app.use(cors({
@@ -36,14 +16,13 @@ app.use(cors({
 // Trust Heroku's reverse proxy
 app.set('trust proxy', 1);
 
-// Initialize Socket.io with CORS and force WebSocket transport only
+// Initialize Socket.io with CORS configuration
 const io = socketIO(server, {
   cors: {
     origin: 'https://eztransfer.netlify.app',
     methods: ['GET', 'POST'],
     credentials: true
-  },
-  transports: ['websocket']  // Force WebSocket-only, skip polling
+  }
 });
 
 // Serve static files if needed
