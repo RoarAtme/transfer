@@ -25,6 +25,28 @@ const io = socketIO(server, {
   }
 });
 
+io.on('connection', (socket) => {
+  console.log('New client connected:', socket.id);
+
+  // Handle file uploads
+  socket.on('file-upload', (data) => {
+    const { peerId, fileName, fileData, fileType } = data;
+    console.log('File received:', fileName);
+
+    // Emit to the specific peer (new window)
+    socket.to(peerId).emit('file-download', {
+      fileName,
+      fileData,
+      fileType
+    });
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
+
+
 // Serve static files if needed
 app.use(express.static('public'));
 

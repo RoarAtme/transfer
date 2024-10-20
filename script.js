@@ -82,14 +82,17 @@ function uploadFile(file) {
 
   reader.onload = function(e) {
     const fileData = e.target.result;  // Base64 encoded string
-    socket.emit('file-upload', { fileName: file.name, fileData });
+    const fileType = file.type;  // File type
+
+    const myPeerId = Math.random().toString(36).substring(7);  // Generate a random Peer ID
+
+    socket.emit('file-upload', { peerId: myPeerId, fileName: file.name, fileData, fileType });
 
     // Hide the progress bar after upload
     progressBar.value = 0;
     progressBar.style.display = 'none';
 
     // Generate QR Code and Direct Link only after upload
-    const myPeerId = Math.random().toString(36).substring(7);  // Generate a random Peer ID
     const link = window.location.href + '?peer=' + myPeerId;
 
     // Generate the QR code for the link after file upload
@@ -106,16 +109,23 @@ function uploadFile(file) {
   reader.readAsDataURL(file);  // Read file as base64
 }
 
-// Handle connection synchronization
+// Handle file-download event and display the image or file link
 socket.on('file-download', (data) => {
-  console.log(`Received file: ${data.fileName}`);
-
-  // Remove loading message when the file is ready
   const loadingMessage = document.getElementById('loading-message');
   if (loadingMessage) {
     loadingMessage.remove();
   }
 
+  console.log(`Received file: ${data.fileName}`);
+
+  // If the file is an image, display it
+  if (data.fileType.startsWith('image/')) {
+    const img = document.createElement('img');
+    img.src = data.fileData;
+    document.body.appendChild(img);
+  }
+
+  // Create and display download link
   const downloadLink = document.createElement('a');
   downloadLink.href = data.fileData;  // Base64-encoded file data
   downloadLink.download = data.fileName;
@@ -123,7 +133,7 @@ socket.on('file-download', (data) => {
   document.body.appendChild(downloadLink);  // Display the download link for the user
 });
 
-// Error Handling
+// Error Handling (optional but useful for debugging)
 socket.on('connect_error', (err) => {
   console.error('Connection error:', err);
 });
