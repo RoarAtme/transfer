@@ -6,52 +6,56 @@ const cors = require('cors');
 const app = express();
 const server = http.createServer(app);
 
-// Enable CORS for Express and allow requests from Netlify
-app.use(cors({ origin: 'https://eztransfer.netlify.app', credentials: true }));
+// Enable CORS for the entire server
+app.use(cors({
+  origin: 'https://eztransfer.netlify.app',  // Allow requests from your Netlify frontend
+  methods: ['GET', 'POST'],                 // Allow GET and POST methods
+  credentials: true                         // Allow credentials (cookies, authorization headers)
+}));
 
-// Initialize Socket.io with CORS enabled and proper transports
+// Initialize Socket.io with explicit CORS settings
 const io = socketIO(server, {
   cors: {
-    origin: 'https://eztransfer.netlify.app',  // Your Netlify URL
-    methods: ['GET', 'POST'],
-    credentials: true,
-    allowedHeaders: ['my-custom-header'],
+    origin: 'https://eztransfer.netlify.app',  // Netlify frontend URL
+    methods: ['GET', 'POST'],                  // Allow GET and POST methods
+    credentials: true                          // If you're using cookies
   },
-  transports: ['websocket', 'polling'],  // Enable both transports explicitly
+  transports: ['websocket', 'polling'],        // Ensure both polling and websocket are supported
 });
 
-// Serve static files from the 'public' folder
+// Serve static files from 'public' folder (if needed)
 app.use(express.static('public'));
 
-// Test route to ensure the server is running
+// Root route for testing server
 app.get('/', (req, res) => {
   res.send('Backend server is running!');
 });
 
-// Handle WebSocket connections
+// Handle Socket.io connections
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
 
-  // Handle WebRTC signaling
+  // WebRTC signaling messages
   socket.on('signal', (data) => {
-    io.to(data.peerId).emit('signal', data);  // Relaying signaling messages to peers
+    io.to(data.peerId).emit('signal', data);  // Relay signaling to peers
   });
 
-  // Handle file uploads and broadcast to other clients
+  // Handle file upload and broadcast to other clients
   socket.on('file-upload', (data) => {
     console.log('File received:', data.fileName);
     socket.broadcast.emit('file-download', {
       fileName: data.fileName,
-      fileData: data.fileData,
+      fileData: data.fileData
     });
   });
 
+  // Handle disconnection
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });
 });
 
-// Start the server on the port specified by Heroku or default to 3000
+// Start server on Heroku's assigned port or default to 3000
 const port = process.env.PORT || 3000;
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
