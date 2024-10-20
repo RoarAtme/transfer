@@ -74,4 +74,4 @@ const qr = new QRious({
 
 // Placeholder for connecting to backend (WebRTC, socket.io, etc.)
 // Example: communicating with backend
-const backendUrl = "https://file-sharing-backend.herokuapp.com"; // Replace with your backend URL
+const backendUrl = "https://file-sharing-backend-7089164001c8.herokuapp.com/"; // Replace with your backend URL
