@@ -6,6 +6,16 @@ const cors = require('cors');
 const app = express();
 const server = http.createServer(app);
 
+socket.on('file-upload', (data) => {
+  console.log('File received:', data.fileName);
+  // Broadcast to other clients
+  socket.broadcast.emit('file-download', {
+    fileName: data.fileName,
+    fileData: data.fileData
+  });
+});
+
+
 // Enable CORS for the entire Express server
 app.use(cors({
   origin: 'https://eztransfer.netlify.app',  // Your Netlify frontend URL
