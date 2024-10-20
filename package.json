@@ -2,10 +2,10 @@
   "name": "transfer",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",  // Updated entry point to server.js
+  "main": "package.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"  // The start command remains correct
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -13,8 +13,5 @@
   "dependencies": {
     "express": "^4.21.1",
     "socket.io": "^4.8.0"
-  },
-  "engines": {  // Optional: specify Node.js version to ensure compatibility
-    "node": ">=14.0.0"
   }
 }
