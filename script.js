@@ -88,15 +88,11 @@ function uploadFile(file) {
 
     const myPeerId = Math.random().toString(36).substring(7);  // Generate a random Peer ID
 
-    // Emit file data to the backend with a unique peerId
-    socket.emit('file-upload', { peerId: myPeerId, fileName: file.name, fileData, fileType });
-
-    // Hide the progress bar after upload
-    progressBar.value = 0;
-    progressBar.style.display = 'none';
-
     // Generate QR Code and Direct Link only after upload
     const link = window.location.href + '?peer=' + myPeerId;
+
+    // Open the new window with the peerId in the URL
+    window.open(link, '_blank');
 
     // Generate the QR code for the link after file upload
     const qr = new QRious({
@@ -107,6 +103,17 @@ function uploadFile(file) {
 
     // Display the direct link for testing in another browser
     directLinkElem.innerHTML = `<a href="${link}" target="_blank">Open in another browser window</a>`;
+
+    // Wait for the new window to confirm the connection before sending the file
+    socket.on('confirm-connection', (peerId) => {
+      if (peerId === myPeerId) {
+        // Emit file data to the backend with the correct peerId
+        socket.emit('file-upload', { peerId: myPeerId, fileName: file.name, fileData, fileType });
+        // Hide the progress bar after upload
+        progressBar.value = 0;
+        progressBar.style.display = 'none';
+      }
+    });
   };
 
   reader.readAsDataURL(file);  // Read file as base64
@@ -143,6 +150,9 @@ socket.on('connect_error', (err) => {
 
 // Loading message for the new window
 window.onload = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const peerId = urlParams.get('peer');
+  socket.emit('confirm-connection', peerId);  // Notify the server that this window is ready to receive the file
   const loadingMessage = document.createElement('div');
   loadingMessage.id = 'loading-message';
   loadingMessage.innerText = 'Preparing your file for download...';

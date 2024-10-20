@@ -16,15 +16,15 @@ app.use(cors({
 // Trust Heroku's reverse proxy
 app.set('trust proxy', 1);
 
-// Initialize Socket.io with CORS configuration
+// Initialize Socket.io with CORS configuration and WebSocket-only transport
 const io = socketIO(server, {
   cors: {
     origin: 'https://eztransfer.netlify.app',
-    methods: ['GET', 'POST', 'OPTIONS'],  // Add OPTIONS for preflight requests
+    methods: ['GET', 'POST', 'OPTIONS'],  // Allow OPTIONS for preflight requests
     credentials: true
   },
   transports: ['websocket'],  // Force WebSocket transport only
-  pingTimeout: 60000,  // Increase timeout to handle network latency
+  pingTimeout: 60000,  // Increase ping timeout to handle network latency
   pingInterval: 25000  // Interval to keep WebSocket connection alive
 });
 
@@ -40,22 +40,23 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
 
+  // Confirm the connection from the new window
+  socket.on('confirm-connection', (peerId) => {
+    console.log(`Window with peerId: ${peerId} connected.`);
+    socket.join(peerId);  // Join a room for this peerId
+  });
+
   // Handle file uploads
   socket.on('file-upload', (data) => {
     const { peerId, fileName, fileData, fileType } = data;
     console.log(`File received: ${fileName}`);
-
-    // Emit to the specific peer (new window) using peerId
-    socket.to(peerId).emit('file-download', {
+    
+    // Emit the file to the specific peer (new window) using peerId
+    io.to(peerId).emit('file-download', {
       fileName,
       fileData,
       fileType  // Ensure fileType is included
     });
-  });
-
-  // Relay WebRTC signaling messages (if needed)
-  socket.on('signal', (data) => {
-    io.to(data.peerId).emit('signal', data);
   });
 
   // Handle client disconnection
