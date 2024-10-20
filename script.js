@@ -4,7 +4,7 @@ const qrCodeElem = document.getElementById('qr-code');  // QR code element
 const directLinkElem = document.getElementById('direct-link');  // Direct link display
 
 // Setup Socket.io connection
-const socket = io('https://file-sharing-backend-7089164001c8.herokuapp.com', { transports: ['websocket'] });
+const socket = io('https://file-sharing-backend-7089164001c8.herokuapp.com');
 
 // Prevent default drag behaviors
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -16,7 +16,16 @@ function preventDefaults(e) {
   e.stopPropagation();
 }
 
+// Highlight drop area when file is being dragged over it
+dropArea.addEventListener('dragenter', () => {
+  dropArea.classList.add('dragging');
+});
+dropArea.addEventListener('dragleave', () => {
+  dropArea.classList.remove('dragging');
+});
+
 dropArea.addEventListener('drop', (e) => {
+  dropArea.classList.remove('dragging');  // Remove the highlighting when the file is dropped
   let dt = e.dataTransfer;
   let files = dt.files;
   handleFiles(files);
@@ -58,7 +67,7 @@ function previewFile(file) {
   }
 }
 
-// Upload file via WebSocket
+// Upload file via Socket.io
 function uploadFile(file) {
   const reader = new FileReader();
   reader.onload = function(e) {
