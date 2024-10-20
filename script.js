@@ -87,12 +87,14 @@ function uploadFile(file) {
     const fileType = file.type;  // File type
 
     const myPeerId = Math.random().toString(36).substring(7);  // Generate a random Peer ID
+    console.log(`Generated peerId: ${myPeerId}`);
 
     // Generate QR Code and Direct Link only after upload
-    const link = window.location.href + '?peer=' + myPeerId;
+    const link = window.location.href.split('?')[0] + '?peer=' + myPeerId; // Ensure no existing parameters
 
     // Open the new window with the peerId in the URL
     window.open(link, '_blank');
+    console.log('New window opened with link:', link);
 
     // Generate the QR code for the link after file upload
     const qr = new QRious({
@@ -108,6 +110,7 @@ function uploadFile(file) {
     socket.on('confirm-connection', (peerId) => {
       console.log(`Confirmed connection for peerId: ${peerId}`);
       if (peerId === myPeerId) {
+        console.log(`Emitting file upload for peerId: ${peerId}`);
         // Emit file data to the backend with the correct peerId
         socket.emit('file-upload', { peerId: myPeerId, fileName: file.name, fileData, fileType });
         // Hide the progress bar after upload

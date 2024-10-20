@@ -53,14 +53,19 @@ io.on('connection', (socket) => {
   // Handle file uploads
   socket.on('file-upload', (data) => {
     const { peerId, fileName, fileData, fileType } = data;
-    console.log(`File received: ${fileName}`);
-    
-    // Emit the file to the specific peer (new window) using peerId
-    io.to(peerId).emit('file-download', {
-      fileName,
-      fileData,
-      fileType  // Ensure fileType is included
-    });
+    if (peerId) {
+      console.log(`File received: ${fileName} from peerId: ${peerId}`);
+      
+      // Emit the file to the specific peer (new window) using peerId
+      io.to(peerId).emit('file-download', {
+        fileName,
+        fileData,
+        fileType  // Ensure fileType is included
+      });
+      console.log(`Broadcasting file ${fileName} to peerId: ${peerId}`);
+    } else {
+      console.log('No valid peerId found for file upload');
+    }
   });
 
   // Handle client disconnection
