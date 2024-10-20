@@ -5,6 +5,15 @@ const cors = require('cors');
 
 const app = express();
 const server = http.createServer(app);
+const io = socketIO(server, {
+  cors: {
+    origin: 'https://eztransfer.netlify.app',
+    methods: ['GET', 'POST'],
+    credentials: true
+  },
+  transports: ['websocket'],  // Use WebSocket only, skip polling
+});
+
 
 // Enable CORS for the entire server
 app.use(cors({
@@ -25,6 +34,9 @@ const io = socketIO(server, {
 
 // Serve static files from 'public' folder (if needed)
 app.use(express.static('public'));
+
+app.set('trust proxy', 1);  // Trust Heroku's reverse proxy
+
 
 // Root route for testing server
 app.get('/', (req, res) => {
