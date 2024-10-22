@@ -34,9 +34,6 @@ function preventDefaults(e) {
 dropArea.addEventListener('dragenter', () => {
   dropArea.classList.add('dragging');
 });
-dropArea.addEventListener('dragover', () => {
-  dropArea.classList.add('dragging');
-});
 dropArea.addEventListener('dragleave', () => {
   dropArea.classList.remove('dragging');
 });
@@ -46,7 +43,7 @@ dropArea.addEventListener('drop', (e) => {
   dropArea.classList.remove('dragging');  // Remove the highlighting when the file is dropped
   let dt = e.dataTransfer;
   let files = dt.files;
-  handleFiles(files);  // Call the function to handle file processing
+  handleFiles(files);
 }, false);
 
 // Handle file input change (when files are selected through the dialog)
@@ -57,7 +54,9 @@ fileInput.addEventListener('change', (e) => {
 
 // Handle the file(s) when dropped or selected via the dialog
 function handleFiles(files) {
+  console.log(`Files dropped: ${files.length}`);
   [...files].forEach(file => {
+    console.log('Handling file:', file.name);
     previewFile(file);  // Display the file preview
     uploadFile(file);   // Upload the file via Socket.io
   });
@@ -119,6 +118,7 @@ function uploadFile(file) {
 
     // Generate QR Code and Direct Link only after upload
     const link = window.location.href.split('?')[0] + '?peer=' + myPeerId;
+    console.log('Generated link:', link);
 
     // Generate the QR code for the link after file upload
     const qr = new QRious({
@@ -136,6 +136,11 @@ function uploadFile(file) {
 
 // Handle file-download event and display the image or file link
 socket.on('file-download', (data) => {
+  const loadingMessage = document.getElementById('loading-message');
+  if (loadingMessage) {
+    loadingMessage.remove();
+  }
+
   console.log('Received file:', data.fileName);
 
   // If the file is an image, display it
@@ -143,6 +148,9 @@ socket.on('file-download', (data) => {
     const img = document.createElement('img');
     img.src = data.fileData;
     document.body.appendChild(img);
+    console.log('Image displayed successfully');
+  } else {
+    console.log('File is not an image');
   }
 
   // Create and display download link
@@ -151,6 +159,7 @@ socket.on('file-download', (data) => {
   downloadLink.download = data.fileName;
   downloadLink.textContent = `Download ${data.fileName}`;
   document.body.appendChild(downloadLink);  // Display the download link for the user
+  console.log('Download link displayed');
 });
 
 // Error Handling (optional but useful for debugging)
@@ -168,4 +177,9 @@ window.onload = () => {
   } else {
     console.error('No peerId found in URL');
   }
+
+  const loadingMessage = document.createElement('div');
+  loadingMessage.id = 'loading-message';
+  loadingMessage.innerText = 'Preparing your file for download...';
+  document.body.appendChild(loadingMessage);  // Show loading message while waiting for the file
 };
