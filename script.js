@@ -1,26 +1,26 @@
 const dropArea = document.getElementById('drop-area');
 const fileInput = document.createElement('input');
 fileInput.type = 'file';
-fileInput.multiple = true;  // Allow selecting multiple files
-fileInput.style.display = 'none';  // Hide the file input
-dropArea.appendChild(fileInput);  // Add the file input to the drop area
+fileInput.multiple = true;
+fileInput.style.display = 'none';
+dropArea.appendChild(fileInput);
 
 const filePreview = document.getElementById('file-preview');
-const qrCodeElem = document.getElementById('qr-code');  // QR code element
-const directLinkElem = document.getElementById('direct-link');  // Direct link display
-const progressBar = document.getElementById('upload-progress');  // Progress bar element
+const qrCodeElem = document.getElementById('qr-code');
+const directLinkElem = document.getElementById('direct-link');
+const progressBar = document.getElementById('upload-progress');
+const errorMessage = document.getElementById('error-message');
+const loadingMessage = document.getElementById('loading-message');
 
 // Setup Socket.io connection
 const socket = io('https://file-sharing-backend-7089164001c8.herokuapp.com', {
-  transports: ['websocket']  // Ensure only WebSocket is used
+  transports: ['websocket']  // Force WebSocket-only
 });
 
-// Click event to open file selection dialog
-dropArea.addEventListener('click', () => {
-  fileInput.click();  // Open the file selection dialog
-});
+// Click to open file dialog
+dropArea.addEventListener('click', () => fileInput.click());
 
-// Prevent default drag behaviors
+// Drag & drop and prevent default behaviors
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
   dropArea.addEventListener(eventName, preventDefaults, false);
 });
@@ -30,34 +30,24 @@ function preventDefaults(e) {
   e.stopPropagation();
 }
 
-// Highlight drop area when file is being dragged over it
-dropArea.addEventListener('dragenter', () => {
-  dropArea.classList.add('dragging');
-});
-dropArea.addEventListener('dragleave', () => {
-  dropArea.classList.remove('dragging');
-});
+// Handle drag-and-drop file highlighting
+dropArea.addEventListener('dragenter', () => dropArea.classList.add('dragging'));
+dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragging'));
 
-// Handle drop event
+// Handle file drop
 dropArea.addEventListener('drop', (e) => {
-  dropArea.classList.remove('dragging');  // Remove the highlighting when the file is dropped
-  let dt = e.dataTransfer;
-  let files = dt.files;
+  dropArea.classList.remove('dragging');
+  const files = e.dataTransfer.files;
   handleFiles(files);
-}, false);
-
-// Handle file input change (when files are selected through the dialog)
-fileInput.addEventListener('change', (e) => {
-  let files = e.target.files;
-  handleFiles(files);  // Process the files
 });
 
-// Handle the file(s) when dropped or selected via the dialog
+// Handle file input dialog
+fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
 function handleFiles(files) {
   [...files].forEach(file => {
-    console.log('Handling file:', file.name);  // Debugging log
-    previewFile(file);  // Display the file preview
-    uploadFile(file);   // Upload the file via Socket.io
+    previewFile(file);
+    uploadFile(file);
   });
 }
 
@@ -82,14 +72,13 @@ function previewFile(file) {
     reader.readAsDataURL(file);
   } else {
     const defaultIcon = document.createElement('img');
-    defaultIcon.src = 'https://via.placeholder.com/100?text=File'; // Placeholder for non-image files
+    defaultIcon.src = 'https://via.placeholder.com/100?text=File';
     fileItem.appendChild(defaultIcon);
     fileItem.appendChild(deleteButton);
     filePreview.appendChild(fileItem);
   }
 }
 
-// Upload file via Socket.io and display progress
 function uploadFile(file) {
   const reader = new FileReader();
 
@@ -97,83 +86,67 @@ function uploadFile(file) {
     if (event.lengthComputable) {
       const progressPercent = (event.loaded / event.total) * 100;
       progressBar.value = progressPercent;
-      progressBar.style.display = 'block';  // Show the progress bar when upload starts
+      progressBar.style.display = 'block';
     }
   };
 
   reader.onload = function(e) {
-    const fileData = e.target.result;  // Base64 encoded string
-    const fileType = file.type;  // File type
+    const fileData = e.target.result;
+    const fileType = file.type;
+    const myPeerId = Math.random().toString(36).substring(7);
 
-    const myPeerId = Math.random().toString(36).substring(7);  // Generate a random Peer ID
-    console.log(`Generated peerId: ${myPeerId}`);  // Debugging log
-
-    // Emit file data to the backend with a unique peerId
     socket.emit('file-upload', { peerId: myPeerId, fileName: file.name, fileData, fileType });
 
-    // Hide the progress bar after upload
     progressBar.value = 0;
     progressBar.style.display = 'none';
 
-    // Generate QR Code and Direct Link only after upload
     const link = window.location.href.split('?')[0] + '?peer=' + myPeerId;
-    console.log('Generated link:', link);  // Debugging log
 
-    // Generate the QR code for the link after file upload
     const qr = new QRious({
-      element: qrCodeElem,  // The canvas element for displaying the QR code
+      element: qrCodeElem,
       value: link,
-      size: 200  // Size of the QR code
+      size: 200
     });
 
-    // Display the direct link for testing in another browser
     directLinkElem.innerHTML = `<a href="${link}" target="_blank">Open in another browser window</a>`;
+    loadingMessage.style.display = 'block';
   };
 
-  reader.readAsDataURL(file);  // Read file as base64
+  reader.readAsDataURL(file);
 }
 
 // Handle file-download event and display the image or file link
 socket.on('file-download', (data) => {
-  console.log('Received file:', data.fileName);  // Debugging log
-  const loadingMessage = document.getElementById('loading-message');
-  if (loadingMessage) {
-    loadingMessage.remove();
-  }
+  loadingMessage.style.display = 'none';
+  errorMessage.style.display = 'none';
 
-  // If the file is an image, display it
   if (data.fileType && data.fileType.startsWith('image/')) {
     const img = document.createElement('img');
     img.src = data.fileData;
     document.body.appendChild(img);
   }
 
-  // Create and display download link
   const downloadLink = document.createElement('a');
-  downloadLink.href = data.fileData;  // Base64-encoded file data
+  downloadLink.href = data.fileData;
   downloadLink.download = data.fileName;
   downloadLink.textContent = `Download ${data.fileName}`;
-  document.body.appendChild(downloadLink);  // Display the download link for the user
+  document.body.appendChild(downloadLink);
 });
 
-// Error Handling (optional but useful for debugging)
+// Error Handling
 socket.on('connect_error', (err) => {
   console.error('Connection error:', err);
+  loadingMessage.style.display = 'none';
+  errorMessage.style.display = 'block';
 });
 
-// Ensure peerId is passed correctly in the URL
+// Check for peerId in URL
 window.onload = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const peerId = urlParams.get('peer');
   if (peerId) {
-    console.log('PeerId from URL:', peerId);  // Log the peerId
-    socket.emit('confirm-connection', peerId);  // Notify the server that this window is ready
+    socket.emit('confirm-connection', peerId);
   } else {
-    console.error('No peerId found in URL');
+    errorMessage.style.display = 'block';
   }
-
-  const loadingMessage = document.createElement('div');
-  loadingMessage.id = 'loading-message';
-  loadingMessage.innerText = 'Preparing your file for download...';
-  document.body.appendChild(loadingMessage);  // Show loading message while waiting for the file
 };
