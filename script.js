@@ -85,43 +85,47 @@ function uploadFile(file) {
   };
 
   reader.onload = function(e) {
-    const fileData = e.target.result;  // Base64 encoded string
-    const fileType = file.type;  // File type
+  const fileData = e.target.result;  // Base64 encoded string
+  const fileType = file.type;  // File type
 
-    const myPeerId = Math.random().toString(36).substring(7);  // Generate a random Peer ID
-    console.log(`Generated peerId: ${myPeerId}`);
+  const myPeerId = Math.random().toString(36).substring(7);  // Generate a random Peer ID
+  console.log(`Generated peerId: ${myPeerId}`);
 
-    // Generate QR Code and Direct Link only after upload
-    const link = window.location.href.split('?')[0] + '?peer=' + myPeerId;
-    console.log('Generated link:', link);  // Log the generated link
-    
-    // Open the new window with the peerId in the URL
-    window.open(link, '_blank');
-    console.log('New window opened with link:', link);
+  // Generate QR Code and Direct Link only after upload
+  const link = window.location.href.split('?')[0] + '?peer=' + myPeerId;
+  console.log('Generated link:', link);  // Log the generated link
+  
+  // Open the new window with the peerId in the URL
+  window.open(link, '_blank');
+  console.log('New window opened with link:', link);
 
-    // Generate the QR code for the link after file upload
-    const qr = new QRious({
-      element: qrCodeElem,  // The canvas element for displaying the QR code
-      value: link,
-      size: 200  // Size of the QR code
-    });
+  // Generate the QR code for the link after file upload
+  const qr = new QRious({
+    element: qrCodeElem,  // The canvas element for displaying the QR code
+    value: link,
+    size: 200  // Size of the QR code
+  });
 
-    // Display the direct link for testing in another browser
-    directLinkElem.innerHTML = `<a href="${link}" target="_blank">Open in another browser window</a>`;
+  // Display the direct link for testing in another browser
+  directLinkElem.innerHTML = `<a href="${link}" target="_blank">Open in another browser window</a>`;
 
-    // Wait for the new window to confirm the connection before sending the file
-    socket.on('confirm-connection', (peerId) => {
-      console.log(`Confirmed connection for peerId: ${peerId}`);
-      if (peerId === myPeerId) {
-        console.log(`Emitting file upload for peerId: ${peerId}`);
-        // Emit file data to the backend with the correct peerId
-        socket.emit('file-upload', { peerId: myPeerId, fileName: file.name, fileData, fileType });
-        // Hide the progress bar after upload
-        progressBar.value = 0;
-        progressBar.style.display = 'none';
-      }
-    });
-  };
+  // Wait for the new window to confirm the connection before sending the file
+  socket.on('confirm-connection', (peerId) => {
+    console.log(`Confirmed connection for peerId: ${peerId}`);
+    if (peerId === myPeerId) {
+      console.log(`Emitting file upload for peerId: ${peerId}`);
+      socket.emit('file-upload', { peerId: myPeerId, fileName: file.name, fileData, fileType });
+      
+      // Add this line to log after the event is emitted
+      console.log(`File upload emitted for ${file.name} to peerId: ${myPeerId}`);
+      
+      // Hide the progress bar after upload
+      progressBar.value = 0;
+      progressBar.style.display = 'none';
+    }
+  });
+};
+
 
   reader.readAsDataURL(file);  // Read file as base64
 }
