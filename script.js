@@ -54,9 +54,8 @@ fileInput.addEventListener('change', (e) => {
 
 // Handle the file(s) when dropped or selected via the dialog
 function handleFiles(files) {
-  console.log(`Files dropped: ${files.length}`);
   [...files].forEach(file => {
-    console.log('Handling file:', file.name);
+    console.log('Handling file:', file.name);  // Debugging log
     previewFile(file);  // Display the file preview
     uploadFile(file);   // Upload the file via Socket.io
   });
@@ -107,7 +106,7 @@ function uploadFile(file) {
     const fileType = file.type;  // File type
 
     const myPeerId = Math.random().toString(36).substring(7);  // Generate a random Peer ID
-    console.log(`Generated peerId: ${myPeerId}`);
+    console.log(`Generated peerId: ${myPeerId}`);  // Debugging log
 
     // Emit file data to the backend with a unique peerId
     socket.emit('file-upload', { peerId: myPeerId, fileName: file.name, fileData, fileType });
@@ -118,7 +117,7 @@ function uploadFile(file) {
 
     // Generate QR Code and Direct Link only after upload
     const link = window.location.href.split('?')[0] + '?peer=' + myPeerId;
-    console.log('Generated link:', link);
+    console.log('Generated link:', link);  // Debugging log
 
     // Generate the QR code for the link after file upload
     const qr = new QRious({
@@ -136,21 +135,17 @@ function uploadFile(file) {
 
 // Handle file-download event and display the image or file link
 socket.on('file-download', (data) => {
+  console.log('Received file:', data.fileName);  // Debugging log
   const loadingMessage = document.getElementById('loading-message');
   if (loadingMessage) {
     loadingMessage.remove();
   }
-
-  console.log('Received file:', data.fileName);
 
   // If the file is an image, display it
   if (data.fileType && data.fileType.startsWith('image/')) {
     const img = document.createElement('img');
     img.src = data.fileData;
     document.body.appendChild(img);
-    console.log('Image displayed successfully');
-  } else {
-    console.log('File is not an image');
   }
 
   // Create and display download link
@@ -159,7 +154,6 @@ socket.on('file-download', (data) => {
   downloadLink.download = data.fileName;
   downloadLink.textContent = `Download ${data.fileName}`;
   document.body.appendChild(downloadLink);  // Display the download link for the user
-  console.log('Download link displayed');
 });
 
 // Error Handling (optional but useful for debugging)
