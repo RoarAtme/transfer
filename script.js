@@ -34,6 +34,9 @@ function preventDefaults(e) {
 dropArea.addEventListener('dragenter', () => {
   dropArea.classList.add('dragging');
 });
+dropArea.addEventListener('dragover', () => {
+  dropArea.classList.add('dragging');
+});
 dropArea.addEventListener('dragleave', () => {
   dropArea.classList.remove('dragging');
 });
@@ -43,7 +46,7 @@ dropArea.addEventListener('drop', (e) => {
   dropArea.classList.remove('dragging');  // Remove the highlighting when the file is dropped
   let dt = e.dataTransfer;
   let files = dt.files;
-  handleFiles(files);
+  handleFiles(files);  // Call the function to handle file processing
 }, false);
 
 // Handle file input change (when files are selected through the dialog)
@@ -100,7 +103,7 @@ function uploadFile(file) {
     }
   };
 
-  reader.onload = function (e) {
+  reader.onload = function(e) {
     const fileData = e.target.result;  // Base64 encoded string
     const fileType = file.type;  // File type
 
