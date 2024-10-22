@@ -4,10 +4,8 @@ const qrCodeElem = document.getElementById('qr-code');  // QR code element
 const directLinkElem = document.getElementById('direct-link');  // Direct link display
 const progressBar = document.getElementById('upload-progress');  // Progress bar element
 
-// Setup Socket.io connection (force WebSocket transport)
-const socket = io('https://file-sharing-backend-7089164001c8.herokuapp.com', {
-  transports: ['websocket']  // Force WebSocket-only transport
-});
+// Setup Socket.io connection (allow WebSocket with fallback)
+const socket = io('https://file-sharing-backend-7089164001c8.herokuapp.com');
 
 // Prevent default drag behaviors
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -31,14 +29,12 @@ dropArea.addEventListener('drop', (e) => {
   dropArea.classList.remove('dragging');  // Remove the highlighting when the file is dropped
   let dt = e.dataTransfer;
   let files = dt.files;
-  console.log(`Files dropped: ${files.length}`);
   handleFiles(files);
 }, false);
 
 // Handle the file(s) when dropped
 function handleFiles(files) {
   [...files].forEach(file => {
-    console.log(`Handling file: ${file.name}`);
     previewFile(file);  // Display the file preview
     uploadFile(file);   // Upload the file via Socket.io
   });
@@ -91,9 +87,15 @@ function uploadFile(file) {
     const myPeerId = Math.random().toString(36).substring(7);  // Generate a random Peer ID
     console.log(`Generated peerId: ${myPeerId}`);
 
+    // Emit file data to the backend with a unique peerId
+    socket.emit('file-upload', { peerId: myPeerId, fileName: file.name, fileData, fileType });
+
+    // Hide the progress bar after upload
+    progressBar.value = 0;
+    progressBar.style.display = 'none';
+
     // Generate QR Code and Direct Link only after upload
-    const link = window.location.href.split('?')[0] + '?peer=' + myPeerId;
-    console.log('Generated link:', link);  // Log the generated link
+    const link = window.location.href + '?peer=' + myPeerId;
 
     // Generate the QR code for the link after file upload
     const qr = new QRious({
@@ -104,19 +106,6 @@ function uploadFile(file) {
 
     // Display the direct link for testing in another browser
     directLinkElem.innerHTML = `<a href="${link}" target="_blank">Open in another browser window</a>`;
-
-    // Wait for the new window (or device) to confirm the connection before sending the file
-    socket.on('confirm-connection', (peerId) => {
-      console.log(`Confirmed connection for peerId: ${peerId}`);
-      if (peerId === myPeerId) {
-        console.log(`Emitting file upload for peerId: ${peerId}`);
-        socket.emit('file-upload', { peerId: myPeerId, fileName: file.name, fileData, fileType });
-        console.log(`File upload emitted for ${file.name} to peerId: ${myPeerId}`);
-        // Hide the progress bar after upload
-        progressBar.value = 0;
-        progressBar.style.display = 'none';
-      }
-    });
   };
 
   reader.readAsDataURL(file);  // Read file as base64
