@@ -5,8 +5,9 @@ const directLinkElem = document.getElementById('direct-link');  // Direct link d
 const progressBar = document.getElementById('upload-progress');  // Progress bar element
 
 // Setup Socket.io connection (allow WebSocket with fallback)
-const socket = io('https://file-sharing-backend-7089164001c8.herokuapp.com');
-
+const socket = io('https://file-sharing-backend-7089164001c8.herokuapp.com', {
+  transports: ['websocket']  // Force WebSocket-only transport
+});
 // Prevent default drag behaviors
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
   dropArea.addEventListener(eventName, preventDefaults, false);

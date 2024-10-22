@@ -16,7 +16,7 @@ app.use(cors({
 // Trust Heroku's reverse proxy
 app.set('trust proxy', 1);
 
-// Initialize Socket.io with CORS configuration and WebSocket-only transport
+// Initialize Socket.io with WebSocket-only transport
 const io = socketIO(server, {
   cors: {
     origin: 'https://eztransfer.netlify.app',
