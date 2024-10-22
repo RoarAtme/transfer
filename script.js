@@ -31,12 +31,14 @@ dropArea.addEventListener('drop', (e) => {
   dropArea.classList.remove('dragging');  // Remove the highlighting when the file is dropped
   let dt = e.dataTransfer;
   let files = dt.files;
+  console.log(`Files dropped: ${files.length}`);
   handleFiles(files);
 }, false);
 
 // Handle the file(s) when dropped
 function handleFiles(files) {
   [...files].forEach(file => {
+    console.log(`Handling file: ${file.name}`);
     previewFile(file);  // Display the file preview
     uploadFile(file);   // Upload the file via Socket.io
   });
@@ -90,8 +92,9 @@ function uploadFile(file) {
     console.log(`Generated peerId: ${myPeerId}`);
 
     // Generate QR Code and Direct Link only after upload
-    const link = window.location.href.split('?')[0] + '?peer=' + myPeerId; // Ensure no existing parameters
-
+    const link = window.location.href.split('?')[0] + '?peer=' + myPeerId;
+    console.log('Generated link:', link);  // Log the generated link
+    
     // Open the new window with the peerId in the URL
     window.open(link, '_blank');
     console.log('New window opened with link:', link);
@@ -157,11 +160,12 @@ window.onload = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const peerId = urlParams.get('peer');
   if (peerId) {
+    console.log(`PeerId from URL: ${peerId}`);  // Log the peerId
     socket.emit('confirm-connection', peerId);  // Notify the server that this window is ready
   } else {
     console.error('No peerId found in URL');
   }
-  
+
   const loadingMessage = document.createElement('div');
   loadingMessage.id = 'loading-message';
   loadingMessage.innerText = 'Preparing your file for download...';
