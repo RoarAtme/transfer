@@ -4,10 +4,11 @@ const qrCodeElem = document.getElementById('qr-code');  // QR code element
 const directLinkElem = document.getElementById('direct-link');  // Direct link display
 const progressBar = document.getElementById('upload-progress');  // Progress bar element
 
-// Setup Socket.io connection (allow WebSocket with fallback)
+// Setup Socket.io connection (force WebSocket transport only)
 const socket = io('https://file-sharing-backend-7089164001c8.herokuapp.com', {
   transports: ['websocket']  // Force WebSocket-only transport
 });
+
 // Prevent default drag behaviors
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
   dropArea.addEventListener(eventName, preventDefaults, false);
@@ -96,7 +97,7 @@ function uploadFile(file) {
     progressBar.style.display = 'none';
 
     // Generate QR Code and Direct Link only after upload
-    const link = window.location.href + '?peer=' + myPeerId;
+    const link = window.location.href.split('?')[0] + '?peer=' + myPeerId;
 
     // Generate the QR code for the link after file upload
     const qr = new QRious({
