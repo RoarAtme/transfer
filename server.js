@@ -53,6 +53,7 @@ io.on('connection', (socket) => {
   // Handle file uploads
   socket.on('file-upload', (data) => {
     const { peerId, fileName, fileData, fileType } = data;
+    
     if (peerId) {
       console.log(`File received: ${fileName} from peerId: ${peerId}`);
       
@@ -60,7 +61,7 @@ io.on('connection', (socket) => {
       io.to(peerId).emit('file-download', {
         fileName,
         fileData,
-        fileType  // Ensure fileType is included
+        fileType
       });
       console.log(`Broadcasting file ${fileName} to peerId: ${peerId}`);
     } else {
